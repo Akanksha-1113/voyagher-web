@@ -1,0 +1,8 @@
+{
+  "name": "voyagher",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "VoyagHER - safety companion for women travelling solo in Southeast Asia",
+  "engines": { "node": ">=18" }
+}
