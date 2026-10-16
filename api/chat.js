@@ -8,7 +8,8 @@ const KB = fs.readFileSync(path.join(process.cwd(), "knowledgebase.txt"), "utf8"
 const INDEX = buildIndex(KB);
 const EMERGENCY = INDEX.chunks.find((c) => c.startsWith("Emergency Numbers")) || "";
 
-const MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
+// Groq retires models over time. We try these in order and skip any that no longer exist.
+const MODELS = [process.env.GROQ_MODEL, "openai/gpt-oss-120b", "openai/gpt-oss-20b"].filter(Boolean);
 const MAX_MSG = 1000;      // characters per user message
 const MAX_TURNS = 10;      // past messages sent back to the model
 
@@ -58,17 +59,25 @@ export default async function handler(req, res) {
 
   const context = topChunks(INDEX, message).join("\n\n");
 
-  const upstream = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
-    body: JSON.stringify({
-      model: MODEL,
-      temperature: 0.5,
-      max_tokens: 600,
-      stream: true,
-      messages: [{ role: "system", content: systemPrompt(context) }, ...history, { role: "user", content: message }],
-    }),
-  });
+  const messages = [{ role: "system", content: systemPrompt(context) }, ...history, { role: "user", content: message }];
+  let upstream;
+  for (const model of MODELS) {
+    const isReasoning = model.startsWith("openai/gpt-oss");
+    upstream = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model,
+        temperature: 0.5,
+        max_completion_tokens: isReasoning ? 1500 : 600, // reasoning models also spend tokens thinking
+        ...(isReasoning ? { reasoning_effort: "low" } : {}),
+        stream: true,
+        messages,
+      }),
+    });
+    if (upstream.status !== 404) break; // 404 = model retired, try the next one
+    console.error("Model unavailable, trying next:", model);
+  }
 
   if (!upstream.ok || !upstream.body) {
     const detail = await upstream.text().catch(() => "");
