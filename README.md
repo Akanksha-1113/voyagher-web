@@ -30,7 +30,7 @@ To install on a phone: open the link, then choose "Add to Home Screen" (Safari s
 
 - **Check the emergency numbers** in `knowledgebase.txt` and `public/index.html` against official sources.
 - Groq's free tier has rate limits. If many people use it at once, some will see "very busy". That is a good problem to have; upgrade then.
-- You can switch the model by adding a `GROQ_MODEL` environment variable in Vercel.
+- The default model is `openai/gpt-oss-120b`, with `openai/gpt-oss-20b` as backup. To use another Groq model, add a `GROQ_MODEL` environment variable in Vercel.
 
 ## Updating
 
