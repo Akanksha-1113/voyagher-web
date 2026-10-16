@@ -1,0 +1,12 @@
+{
+  "name": "VoyagHER - Solo Travel Safety Companion",
+  "short_name": "VoyagHER",
+  "description": "A safety companion for women travelling solo in Southeast Asia.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f3d3a",
+  "theme_color": "#0f3d3a",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

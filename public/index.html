@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VoyagHER · Solo travel safety companion</title>
+<meta name="description" content="Ask VoyagHER about scams, transport, night safety and local customs across Southeast Asia. Built for women travelling solo.">
+<meta name="theme-color" content="#0f3d3a">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f3ec; --surface: #ffffff; --ink: #1d2523; --muted: #5d6865; --line: #e4ddd1;
+    --brand: #0f3d3a; --brand-ink: #ffffff; --accent: #e0603f; --gold: #f2b45a;
+    --user: #0f3d3a; --user-ink: #ffffff; --bot: #ffffff;
+    --red: #c2392b; --red-bg: #fdecea;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1716; --surface: #15211f; --ink: #e9efed; --muted: #9aa8a5; --line: #26332f;
+      --brand: #1d5a55; --user: #1d5a55; --bot: #15211f; --red-bg: #3a1a17; --red: #ff8a7a;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 Inter, system-ui, sans-serif; display: flex; flex-direction: column; }
+  header { background: var(--brand); color: var(--brand-ink); padding: 14px 16px; padding-top: max(14px, env(safe-area-inset-top)); display: flex; align-items: center; gap: 12px; }
+  header img { width: 38px; height: 38px; border-radius: 10px; }
+  header h1 { font: 700 1.3rem/1.1 "Playfair Display", serif; margin: 0; }
+  header p { margin: 2px 0 0; font-size: .82rem; opacity: .85; }
+  header .sos { margin-left: auto; background: var(--accent); color: #fff; border: 0; border-radius: 999px; padding: 9px 14px; font: 600 .85rem Inter, sans-serif; cursor: pointer; white-space: nowrap; }
+  main { flex: 1; overflow-y: auto; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 20px 16px; }
+  .intro { text-align: center; padding: 18px 0 8px; }
+  .intro h2 { font: 700 1.6rem/1.2 "Playfair Display", serif; margin: 0 0 8px; }
+  .intro p { color: var(--muted); margin: 0 auto 18px; max-width: 34em; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .chip { background: var(--surface); border: 1px solid var(--line); color: var(--ink); border-radius: 999px; padding: 8px 14px; font: 500 .9rem Inter, sans-serif; cursor: pointer; text-align: left; }
+  .chip:hover { border-color: var(--accent); }
+  .msg { display: flex; margin: 14px 0; }
+  .msg .bubble { max-width: 88%; padding: 12px 15px; border-radius: 16px; overflow-wrap: anywhere; }
+  .msg.user { justify-content: flex-end; }
+  .msg.user .bubble { background: var(--user); color: var(--user-ink); border-bottom-right-radius: 4px; white-space: pre-wrap; }
+  .msg.bot .bubble { background: var(--bot); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+  .bubble p { margin: 0 0 .6em; } .bubble p:last-child { margin: 0; }
+  .bubble ul, .bubble ol { margin: .2em 0 .6em; padding-left: 1.3em; }
+  .bubble.error { border-color: var(--red); color: var(--red); }
+  .typing span { display: inline-block; width: 7px; height: 7px; margin: 0 2px; border-radius: 50%; background: var(--muted); animation: blink 1.2s infinite; }
+  .typing span:nth-child(2) { animation-delay: .2s; } .typing span:nth-child(3) { animation-delay: .4s; }
+  @keyframes blink { 0%, 80%, 100% { opacity: .25 } 40% { opacity: 1 } }
+  footer { border-top: 1px solid var(--line); background: var(--surface); padding: 12px 16px; padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+  form { max-width: 760px; margin: 0 auto; display: flex; gap: 8px; }
+  textarea { flex: 1; resize: none; border: 1px solid var(--line); border-radius: 14px; padding: 11px 14px; font: 16px/1.4 Inter, sans-serif; background: var(--bg); color: var(--ink); max-height: 140px; }
+  textarea:focus { outline: 2px solid var(--accent); outline-offset: 0; }
+  button.send { background: var(--accent); color: #fff; border: 0; border-radius: 14px; padding: 0 18px; font: 600 .95rem Inter, sans-serif; cursor: pointer; }
+  button.send:disabled { opacity: .5; cursor: default; }
+  .fine { max-width: 760px; margin: 8px auto 0; font-size: .75rem; color: var(--muted); text-align: center; }
+  dialog { border: 0; border-radius: 18px; padding: 0; width: min(440px, calc(100% - 32px)); background: var(--surface); color: var(--ink); }
+  dialog::backdrop { background: rgba(0,0,0,.5); }
+  .sheet { padding: 20px; max-height: calc(100dvh - 48px); overflow-y: auto; }
+  .sheet h3 { margin: 0 0 4px; font: 700 1.25rem "Playfair Display", serif; }
+  .sheet .note { color: var(--muted); font-size: .85rem; margin: 0 0 12px; }
+  .alert { background: var(--red-bg); color: var(--red); border-radius: 10px; padding: 10px 12px; font-size: .88rem; margin-bottom: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+  td { padding: 8px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td:first-child { font-weight: 600; width: 34%; }
+  td a { color: inherit; font-weight: 600; }
+  .close { margin-top: 14px; width: 100%; background: var(--brand); color: #fff; border: 0; border-radius: 12px; padding: 11px; font: 600 .95rem Inter, sans-serif; cursor: pointer; }
+  @media (max-width: 480px) { header p { display: none; } .intro h2 { font-size: 1.35rem; } }
+</style>
+</head>
+<body>
+<header>
+  <img src="/icon.svg" alt="">
+  <div>
+    <h1>VoyagHER</h1>
+    <p>Your safety companion for solo travel in Southeast Asia</p>
+  </div>
+  <button class="sos" id="sosBtn" type="button">Emergency numbers</button>
+</header>
+
+<main id="scroller">
+  <div class="wrap" id="chat">
+    <section class="intro" id="intro">
+      <h2>Travel boldly. Travel safely.</h2>
+      <p>Ask about scams, night transport, where to stay, local customs, or what to do if something feels wrong. Covering Thailand, Vietnam, Cambodia, Laos, Malaysia, Singapore, Indonesia, the Philippines, Myanmar and Brunei.</p>
+      <div class="chips" id="chips">
+        <button class="chip" type="button">I think someone is following me in Bangkok. What do I do?</button>
+        <button class="chip" type="button">How do I get back to my hostel safely at night in Hanoi?</button>
+        <button class="chip" type="button">A man says the temple is closed today. Is this a scam?</button>
+        <button class="chip" type="button">What should I wear to visit temples in Bali?</button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <form id="form">
+    <textarea id="input" rows="1" placeholder="Ask VoyagHER anything…" aria-label="Your message" maxlength="1000"></textarea>
+    <button class="send" id="send" type="submit">Send</button>
+  </form>
+  <p class="fine">VoyagHER gives general safety guidance and can make mistakes. In an emergency, call local emergency services first.</p>
+</footer>
+
+<dialog id="sos">
+  <div class="sheet">
+    <h3>Emergency numbers</h3>
+    <p class="note">Works offline once the app has loaded. Tap a number to call.</p>
+    <div class="alert">If you are in danger right now: move to a busy, lit place, go into a shop or hotel, and call the police.</div>
+    <table id="numbers"></table>
+    <p class="note" style="margin-top:12px">Also save your embassy's number and your hotel's address before you travel.</p>
+    <button class="close" type="button" id="closeSos">Close</button>
+  </div>
+</dialog>
+
+<script>
+const NUMBERS = [
+  ["Thailand", [["Police", "191"], ["Ambulance", "1669"], ["Tourist Police", "1155"]]],
+  ["Vietnam", [["Police", "113"], ["Ambulance", "115"]]],
+  ["Cambodia", [["Police", "117"], ["Ambulance", "119"]]],
+  ["Laos", [["Police", "1191"], ["Ambulance", "1195"]]],
+  ["Malaysia", [["Police & Ambulance", "999"]]],
+  ["Singapore", [["Police", "999"], ["Ambulance", "995"]]],
+  ["Indonesia", [["Police", "110"], ["Ambulance", "118"], ["General", "112"]]],
+  ["Philippines", [["Emergency", "911"]]],
+  ["Myanmar", [["Police", "199"], ["Ambulance", "192"]]],
+  ["Brunei", [["Police", "993"], ["Ambulance", "991"]]],
+];
+const $ = (id) => document.getElementById(id);
+$("numbers").innerHTML = NUMBERS.map(([c, list]) =>
+  `<tr><td>${c}</td><td>${list.map(([l, n]) => `${l}: <a href="tel:${n}">${n}</a>`).join("<br>")}</td></tr>`).join("");
+$("sosBtn").onclick = () => $("sos").showModal();
+$("closeSos").onclick = () => $("sos").close();
+
+const history = [];
+let busy = false;
+
+const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+// Small, safe markdown: paragraphs, bullet/numbered lists, **bold**.
+function render(md) {
+  const lines = esc(md).split("\n");
+  let html = "", list = null;
+  const close = () => { if (list) { html += `</${list}>`; list = null; } };
+  for (const raw of lines) {
+    const line = raw.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/^#{1,4}\s*/, "");
+    const ul = line.match(/^\s*[-*•]\s+(.*)/), ol = line.match(/^\s*\d+[.)]\s+(.*)/);
+    if (ul || ol) {
+      const tag = ul ? "ul" : "ol";
+      if (list !== tag) { close(); html += `<${tag}>`; list = tag; }
+      html += `<li>${(ul || ol)[1]}</li>`;
+    } else if (line.trim()) { close(); html += `<p>${line}</p>`; }
+    else close();
+  }
+  close();
+  return html;
+}
+
+function addMsg(role, content) {
+  const row = document.createElement("div");
+  row.className = `msg ${role}`;
+  const b = document.createElement("div");
+  b.className = "bubble";
+  if (role === "user") b.textContent = content; else b.innerHTML = content;
+  row.appendChild(b);
+  $("chat").appendChild(row);
+  scrollDown();
+  return b;
+}
+const scrollDown = () => { const s = $("scroller"); s.scrollTop = s.scrollHeight; };
+
+async function send(text) {
+  text = text.trim();
+  if (!text || busy) return;
+  busy = true; $("send").disabled = true;
+  $("intro")?.remove();
+  addMsg("user", text);
+  const bubble = addMsg("bot", '<span class="typing"><span></span><span></span><span></span></span>');
+  let reply = "";
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text, history }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Something went wrong. Please try again.");
+    }
+    const reader = res.body.getReader(), dec = new TextDecoder();
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      reply += dec.decode(value, { stream: true });
+      bubble.innerHTML = render(reply);
+      scrollDown();
+    }
+    if (!reply) throw new Error("No reply came back. Please try again.");
+    history.push({ role: "user", content: text }, { role: "assistant", content: reply });
+  } catch (e) {
+    bubble.classList.add("error");
+    bubble.textContent = navigator.onLine ? e.message : "You're offline. The Emergency numbers button still works.";
+  } finally {
+    busy = false; $("send").disabled = false; $("input").focus();
+  }
+}
+
+$("form").onsubmit = (e) => { e.preventDefault(); const t = $("input").value; $("input").value = ""; autosize(); send(t); };
+$("input").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("form").requestSubmit(); } });
+const autosize = () => { const t = $("input"); t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 140) + "px"; };
+$("input").addEventListener("input", autosize);
+$("chips").addEventListener("click", (e) => { if (e.target.matches(".chip")) send(e.target.textContent); });
+
+if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
+</script>
+</body>
+</html>
